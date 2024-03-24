@@ -2,158 +2,50 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 
 namespace WindowsFormsApp1
 {
+    
     public partial class Form1 : Form
     {
 
-        const int SIZE = 11;
-
-        // Функція для знаходження вершини з найменшою відстанню, яка ще не була відвідана
-        static int FindMinDistanceVertex(double[] dist, bool[] visited)
+        public int[,] graph = new int[,]
         {
-            double minDist = double.MaxValue;
-            int minIndex = -1;
+            { -1, -1, -1, 1, -1, -1, 1, -1, -1, -1, -1 }, //1
+            { -1, -1, 1, -1, -1, 1, -1, -1, -1, -1, 1 },//2
+            { -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, -1 },//3
+            { 1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1 },//4
+            { -1, -1, 1, -1, -1, -1, -1, 1, -1, 1, -1 },//5
+            { -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1 },//6
+            { 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },//7
+            { -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1 },//8
+            { -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1 },//9
+            { -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, -1 },//10
+            { -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, -1 }//11
+        };
 
-            for (int i = 0; i < SIZE; ++i)
-            {
-                if (!visited[i] && dist[i] < minDist)
-                {
-                    minDist = dist[i];
-                    minIndex = i;
-                }
-            }
-
-            return minIndex;
-        }
-
-
-        // Функція для виведення найкоротших шляхів до всіх вершин з використанням алгоритму Дейкстри
-        static void Dijkstra(double[,] graph, int startVertex, ref string message)
-        {
-            
-
-            double[] dist = new double[SIZE]; // Масив для зберігання найкоротших відстаней до вершин
-            bool[] visited = new bool[SIZE]; // Масив, що вказує, чи була відвідана вершина
-            List<int>[] path = new List<int>[SIZE]; // Масив для зберігання шляхів до вершин
-
-            // Ініціалізуємо масиви
-            for (int i = 0; i < SIZE; ++i)
-            {
-                dist[i] = double.MaxValue; // Встановлюємо відстань до всіх вершин на початку як нескінченність
-                visited[i] = false; // Жодна вершина ще не відвідана
-                path[i] = new List<int>(); // Ініціалізуємо список для шляху до вершини
-            }
-
-            // Відстань до стартової вершини завжди 0
-            dist[startVertex] = 0;
-            path[startVertex].Add(startVertex); // Шлях до початкової вершини
-
-            // Знаходимо найкоротший шлях для кожної вершини
-            for (int count = 0; count < SIZE - 1; ++count)
-            {
-                int u = FindMinDistanceVertex(dist, visited); // Знаходимо вершину з найменшою відстанню
-                visited[u] = true; // Позначаємо вершину як відвідану
-
-                // Оновлюємо відстані до сусідніх вершин, якщо вони ще не відвідані і відстань до них через поточну вершину коротша
-                for (int v = 0; v < SIZE; ++v)
-                {
-                    if (!visited[v] && graph[u, v] != -1 && dist[u] != double.MaxValue && dist[u] + graph[u, v] < dist[v])
-                    {
-                        dist[v] = dist[u] + graph[u, v];
-                        path[v] = new List<int>(path[u]); // Копіюємо шлях до вершини u
-                        path[v].Add(v); // Додаємо вершину v до шляху
-                    }
-                }
-            }
-
-            // Виводимо результати
-            message += $"Distances and paths to all vertices from the vertex {startVertex + 1}: \n";
-            for (int i = 0; i < SIZE; ++i)
-            {
-                message += $"Top {i + 1}: ";
-                if (dist[i] != double.MaxValue)
-                {
-
-                    message += $"\ncost - {dist[i]};\t Way - ";
-                    for (int j = 0; j < path[i].Count; ++j)
-                    {
-                        //string tmp_vench = ((path[i][j] + 1) != 6 ? "Маршрутка" : "Фунiкулер");
-                        message += path[i][j] + 1; // Додати 1 до індексів для нумерації з 1
-                        if (j < path[i].Count - 1)
-                        {
-                            //Console.Write($"-> {tmp_vench} -> ");
-                            message += $" -> ";
-                        }
-                    }
-                    message += "\n";
-                }
-                else
-                {
-                    message += "impossible to achieve\n";
-                }
-            }
-        }
-
-        static void FloydWarshall(List<List<double>> graph, List<List<int>> next)
-        {
-            for (int k = 0; k < SIZE; k++)
-            {
-                for (int i = 0; i < SIZE; i++)
-                {
-                    for (int j = 0; j < SIZE; j++)
-                    {
-                        if (graph[i][k] != -1 && graph[k][j] != -1 &&
-                            (graph[i][j] == -1 || graph[i][k] + graph[k][j] < graph[i][j]))
-                        {
-                            graph[i][j] = graph[i][k] + graph[k][j];
-                            next[i][j] = k;
-                        }
-                    }
-                }
-            }
-        }
-
-        static void PrintPath(int i, int j, List<List<int>> next, ref string message)
-        {
-            if (next[i][j] == -1)
-            {
-                message += (j + 1);
-                return;
-            }
-
-            message += next[i][j] + 1 + " -> ";
-            PrintPath(next[i][j], j, next, ref message);
-        }
-
-        static void OutputResult(int startVertex, List<List<double>> graph, List<List<int>> next, ref string message)
-        {
-            message += $"\nМiнiмальний шлях для обходу всiх вершин, починаючи з {startVertex + 1} вершини:\n";
-            for (int j = 0; j < SIZE; j++)
-            {
-                if (j != startVertex)
-                {
-                    message += $"Початок (КПI): {startVertex + 1} -> {j + 1}: ";
-                    if (graph[startVertex][j] != -1)
-                    {
-                        message += $"{startVertex + 1} ->";
-                        PrintPath(startVertex, j, next, ref message);
-                    }
-                    else
-                    {
-                        message += "Немає шляху";
-                    }
-                    message += $"\t\t || Вартiсть: {graph[startVertex][j]} UAH \t\n";
-                }
-            }
-        }
+        //public int[,] graph = new int[,]
+        //{
+        //    { -1, -1, -1, 1, -1, -1, 1, -1, -1, -1, -1 }, //1
+        //    { -1, -1, 1, -1, -1, 1, -1, -1, -1, -1, 1 },//2
+        //    { -1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1 },//3
+        //    { 1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1 },//4
+        //    { -1, -1, 1, -1, -1, -1, -1, 1, -1, 1, -1 },//5
+        //    { -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1 },//6
+        //    { 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },//7
+        //    { -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1 },//8
+        //    { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },//9
+        //    { -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, -1 },//10
+        //    { -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, -1 }//11
+        //};
 
         public Form1()
         {
@@ -167,67 +59,79 @@ namespace WindowsFormsApp1
 
         private void button1_Click(object sender, EventArgs e)
         {
+            Stopwatch stopwatch = new Stopwatch();
             string message = "";
 
             if (radioButton1 != null && radioButton1.Checked)
             {
-                    double[,] graph = {
-                { -1, -1, -1, 15, -1, -1, 15, -1, -1, -1, -1 },
-                { -1, -1, 15, -1, -1, 23, -1, -1, -1, -1, 23 },
-                { -1, 15, -1, -1, 15, 23, -1, -1, 15, -1, -1 },
-                { 15, -1, -1, -1, -1, -1, -1, 15, 15, -1, -1 },
-                { -1, -1, 15, -1, -1, -1, -1, 15, 15, 15, -1 },
-                { -1, 23, 23, -1, -1, -1, -1, -1, -1, -1, 23 },
-                { 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
-                { -1, -1, -1, 15, 15, -1, -1, -1, -1, 15, -1 },
-                { -1, -1, 15, 15, 15, -1, -1, -1, -1, -1, -1 },
-                { -1, -1, -1, -1, 15, -1, -1, 15, -1, -1, -1 },
-                { -1, 15, -1, -1, -1, 23, -1, -1, -1, -1, -1 }
-                };
+                                                
+                // Створення графу
+                Tarjana g = new Tarjana(11);
 
-                // Застосовуємо алгоритм Дейкстри для знаходження найкоротших шляхів від вершини 1
-                Dijkstra(graph, 6, ref message);
+                // Додавання ребер до графу з використанням матриці суміжності
+                for (int i = 0; i < 11; i++)
+                {
+                    for (int j = 0; j < 11; j++)
+                    {
+                        if (graph[i, j] == 1)
+                        {
+                            g.AddEdge(i, j);
+                        }
+                    }
+                }
 
-                MessageBox.Show(message, "Знаходження оптимального маршруту за допомогою алгоритму Деїкстри", MessageBoxButtons.OK);
+                // Виклик алгоритму Тарьяна та виведення результатів
+                Console.WriteLine("Компоненти сильної зв'язності:");
+                stopwatch.Start();
+                var resT = g.Tarjan();
+                stopwatch.Stop();
+                for (int i = 0; i < resT.Count; i++)
+                {
+                    message += $"Компонента {i + 1}: \n";
+                    foreach (var vertex in resT[i])
+                    {
+                        message += $"{vertex + 1} ";
+                    }
+                    message += "\n";
+                }
+
+                message += "\n" + stopwatch.Elapsed.ToString();
+
+                MessageBox.Show(message, "Знаходження компонентів сильної зв'язності за допомогою алгоритму Тар'яна", MessageBoxButtons.OK);
             }
             else if (radioButton2 != null && radioButton2.Checked) 
             {
 
-                // iнiцiалiзацiя графу з вагами ребер
-                List<List<double>> graph = new List<List<double>>
-                {
-                    new List<double>{ -1, -1, -1, 15, -1, -1, 15, -1, -1, -1, -1 },
-                    new List<double>{ -1, -1, 15, -1, -1, 23, -1, -1, -1, -1, 23 },
-                    new List<double>{ -1, 15, -1, -1, 15, 23, -1, -1, 15, -1, -1 },
-                    new List<double>{ 15, -1, -1, -1, -1, -1, -1, 15, 15, -1, -1 },
-                    new List<double>{ -1, -1, 15, -1, -1, -1, -1, 15, 15, 15, -1 },
-                    new List<double>{ -1, 23, 23, -1, -1, -1, -1, -1, -1, -1, 23 },
-                    new List<double>{ 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
-                    new List<double>{ -1, -1, -1, 15, 15, -1, -1, -1, -1, 15, -1 },
-                    new List<double>{ -1, -1, 15, 15, 15, -1, -1, -1, -1, -1, -1 },
-                    new List<double>{ -1, -1, -1, -1, 15, -1, -1, 15, -1, -1, -1 },
-                    new List<double>{ -1, 15, -1, -1, -1, 23, -1, -1, -1, -1, -1 }
-                };
+                Kosaraju g = new Kosaraju(11);
 
-                // iнiцiалiзацiя матрицi next для вiдстеження шляху
-                List<List<int>> next = new List<List<int>>();
-                for (int i = 0; i < SIZE; i++)
+                for (int i = 0; i < 11; i++)
                 {
-                    next.Add(new List<int>());
-                    for (int j = 0; j < SIZE; j++)
+                    for (int j = 0; j < 11; j++)
                     {
-                        next[i].Add(-1);
+                        if (graph[i, j] == 1)
+                        {
+                            g.AddEdge(i, j);
+                        }
                     }
                 }
+                
+                stopwatch.Start();
+                List<List<int>> resK = g.GetresK();
+                stopwatch.Stop();
 
-                FloydWarshall(graph, next);
+                // Виведення знайдених компонент
+                Console.WriteLine("Сильно зв'язні компоненти:");
+                for (int i = 0; i < resK.Count; i++)
+                {
+                    message += $"Компонента {i + 1}: \n";
+                    foreach (int vertex in resK[i])
+                    {
+                        message += vertex+1 + " ";
+                    }
+                    message += "\n";
+                }
 
-
-
-                int startVertex = 6; // Вершина, з якої починається обхiд
-
-
-                OutputResult(startVertex, graph, next, ref message );
+                message += "\n" + stopwatch.Elapsed.ToString();
 
                 MessageBox.Show(message, "Знаходження оптимального маршруту за допомогою алгоритму Флойда-Уоршела", MessageBoxButtons.OK);
             }
@@ -241,5 +145,183 @@ namespace WindowsFormsApp1
             
 
         }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+    }
+
+    
+}
+
+class Tarjana
+{
+    private int V; // Кількість вершин
+    private List<int>[] sumList; // Список суміжностей
+
+    public Tarjana(int v)
+    {
+        V = v;
+        sumList = new List<int>[v];
+        for (int i = 0; i < v; ++i)
+        {
+            sumList[i] = new List<int>();
+        }
+    }
+
+    public void AddEdge(int v, int w)
+    {
+        sumList[v].Add(w);
+    }
+
+    // Реалізація алгоритму Тарьяна
+    public List<List<int>> Tarjan()
+    {
+        int index = 0;
+        var stack = new Stack<int>();
+        var resTList = new List<List<int>>();
+        var indexes = new int[V];
+        for (int i = 0; i < V; i++)
+            indexes[i] = -1;
+        var lowlinks = new int[V];
+        var visited = new bool[V];
+
+        // Функція для обходу графу DFS
+        void StrongConnect(int v)
+        {
+            indexes[v] = index;
+            lowlinks[v] = index;
+            index++;
+            stack.Push(v);
+            visited[v] = true;
+
+            foreach (var w in sumList[v])
+            {
+                if (indexes[w] < 0)
+                {
+                    StrongConnect(w);
+                    lowlinks[v] = Math.Min(lowlinks[v], lowlinks[w]);
+                }
+                else if (visited[w])
+                {
+                    lowlinks[v] = Math.Min(lowlinks[v], indexes[w]);
+                }
+            }
+
+            if (lowlinks[v] == indexes[v])
+            {
+                var resT = new List<int>();
+                int w;
+                do
+                {
+                    w = stack.Pop();
+                    visited[w] = false;
+                    resT.Add(w);
+                } while (w != v);
+                resTList.Add(resT);
+            }
+        }
+
+        for (int v = 0; v < V; v++)
+        {
+            if (indexes[v] < 0)
+            {
+                StrongConnect(v);
+            }
+        }
+
+        return resTList;
     }
 }
+
+class Kosaraju
+{
+    private int V; // Кількість вершин
+    private List<int>[] sum; // Список суміжностей
+
+    public Kosaraju(int v)
+    {
+        V = v;
+        sum = new List<int>[v];
+        for (int i = 0; i < v; ++i)
+            sum[i] = new List<int>();
+    }
+
+    // Додати ребро до графа
+    public void AddEdge(int v, int w)
+    {
+        sum[v].Add(w);
+    }
+
+    // Вивести всі сильно зв'язні компоненти
+    public List<List<int>> GetresK()
+    {
+        Stack<int> stack = new Stack<int>();
+        bool[] visited = new bool[V];
+
+        // Пушуємо всі вершини на стек у порядку збільшення їхніх індексів
+        for (int i = 0; i < V; i++)
+            if (!visited[i])
+                FillOrder(i, visited, stack);
+
+        // Створюємо транспонований граф
+        Kosaraju transposedKosaraju = GetTranspose();
+
+        // Позначаємо всі вершини як неперевірені
+        for (int i = 0; i < V; i++)
+            visited[i] = false;
+
+        List<List<int>> resK = new List<List<int>>();
+
+        // Проходження по транспонованому графу та збереження сильно зв'язних компонент
+        while (stack.Count != 0)
+        {
+            int v = stack.Pop();
+            if (!visited[v])
+            {
+                List<int> component = new List<int>();
+                transposedKosaraju.DFS(v, visited, component);
+                resK.Add(component);
+            }
+        }
+
+        return resK;
+    }
+
+    // Допоміжний метод для заповнення стеку в порядку збільшення індексів
+    private void FillOrder(int v, bool[] visited, Stack<int> stack)
+    {
+        visited[v] = true;
+
+        foreach (var neighbor in sum[v])
+            if (!visited[neighbor])
+                FillOrder(neighbor, visited, stack);
+
+        stack.Push(v);
+    }
+
+    // Допоміжний метод для обходу графа в глибину
+    private void DFS(int v, bool[] visited, List<int> component)
+    {
+        visited[v] = true;
+        component.Add(v);
+
+        foreach (var neighbor in sum[v])
+            if (!visited[neighbor])
+                DFS(neighbor, visited, component);
+    }
+
+    // Отримати транспонований граф
+    private Kosaraju GetTranspose()
+    {
+        Kosaraju transposedKosaraju = new Kosaraju(V);
+        for (int v = 0; v < V; v++)
+        {
+            foreach (var neighbor in sum[v])
+                transposedKosaraju.AddEdge(neighbor, v);
+        }
+        return transposedKosaraju;
+    }
+}
+
